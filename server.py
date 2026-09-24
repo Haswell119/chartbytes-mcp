@@ -20,7 +20,7 @@ import urllib.parse
 import urllib.request
 
 CHARTBYTES_URL = os.environ.get(
-    "CHARTBYTES_URL", "https://chartbytes.onrender.com"
+    "CHARTBYTES_URL", "https://chartbytes.meridian-digital.pro"
 ).rstrip("/")
 
 CHART_TYPES = ["bar", "hbar", "stacked", "pie", "donut"]
@@ -28,7 +28,7 @@ FORMATS = ["png", "svg"]
 THEMES = ["light", "dark", "brand"]
 
 SERVER_NAME = "chartbytes-mcp"
-SERVER_VERSION = "0.1.0"
+SERVER_VERSION = "0.2.0"
 
 
 # --------------------------------------------------------------------------- #

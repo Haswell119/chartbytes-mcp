@@ -1,8 +1,10 @@
 # ChartBytes MCP server
 
+[![Haswell119/chartbytes-mcp MCP server](https://glama.ai/mcp/servers/Haswell119/chartbytes-mcp/badges/score.svg)](https://glama.ai/mcp/servers/Haswell119/chartbytes-mcp)
+
 A [Model Context Protocol](https://modelcontextprotocol.io) server that gives any MCP
 client (Claude, Cursor, Claude Code, or any agent) the `generate_chart` tool — render a
-chart to a **static image URL** via [ChartBytes](https://chartbytes.onrender.com) and get
+chart to a **static image URL** via [ChartBytes](https://chartbytes.meridian-digital.pro) and get
 it back both inline (to see) and as a URL/markdown snippet (to embed).
 
 Zero dependencies — pure Python stdlib. One file, runs over stdio.
@@ -28,7 +30,7 @@ No install required — just point your MCP client at `server.py`:
 }
 ```
 
-Optional: `"env": { "CHARTBYTES_URL": "https://chartbytes.onrender.com" }` (defaults to
+Optional: `"env": { "CHARTBYTES_URL": "https://chartbytes.meridian-digital.pro" }` (defaults to
 the hosted endpoint).
 
 ## Tool: `generate_chart`
