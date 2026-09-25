@@ -1,6 +1,6 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.haswell119/chartbytes-mcp",
+  "name": "io.github.Haswell119/chartbytes-mcp",
   "title": "ChartBytes",
   "description": "Generate chart images (bar, pie, donut, stacked) as PNG/SVG for AI agents, with an embeddable URL.",
   "version": "1.0.0",
