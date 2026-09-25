@@ -22,13 +22,14 @@ import urllib.request
 CHARTBYTES_URL = os.environ.get(
     "CHARTBYTES_URL", "https://chartbytes.meridian-digital.pro"
 ).rstrip("/")
+CHARTBYTES_LICENSE = os.environ.get("CHARTBYTES_LICENSE", "").strip()
 
 CHART_TYPES = ["bar", "hbar", "stacked", "pie", "donut"]
 FORMATS = ["png", "svg"]
 THEMES = ["light", "dark", "brand"]
 
 SERVER_NAME = "chartbytes-mcp"
-SERVER_VERSION = "0.2.0"
+SERVER_VERSION = "0.3.0"
 
 
 # --------------------------------------------------------------------------- #
@@ -75,7 +76,7 @@ def build_chart_url(args):
     if theme not in THEMES:
         raise ValueError(f"theme must be one of {THEMES}")
 
-    q = urllib.parse.urlencode({
+    qparams = {
         "t": ctype,
         "d": series_str,
         "labels": labels,
@@ -84,7 +85,10 @@ def build_chart_url(args):
         "h": args.get("height", 300),
         "format": fmt,
         "theme": theme,
-    })
+    }
+    if CHARTBYTES_LICENSE:
+        qparams["lic"] = CHARTBYTES_LICENSE
+    q = urllib.parse.urlencode(qparams)
     return f"{CHARTBYTES_URL}/chart?{q}", fmt
 
 
@@ -101,41 +105,69 @@ TOOLS = [
     {
         "name": "generate_chart",
         "description": (
-            "Render a chart to a static image URL using the ChartBytes API and return "
-            "it both inline (so you can see it) and as an embeddable URL/markdown for "
-            "READMEs, emails, Notion, Slack or PDFs. Supports bar, hbar, stacked, pie "
-            "and donut charts, PNG or SVG output."
+            "Render a chart as a static image (PNG or SVG) via the ChartBytes API and "
+            "return it both inline (an image the caller can view) and as an embeddable "
+            "URL + Markdown snippet for READMEs, emails, Notion, Slack, or PDFs — anywhere "
+            "an <img> works but a JavaScript charting library cannot. Read-only: generates "
+            "an image from the supplied data and never mutates external state."
         ),
+        "annotations": {
+            "readOnlyHint": True,
+            "idempotentHint": True,
+        },
         "inputSchema": {
             "type": "object",
             "properties": {
                 "type": {
                     "type": "string",
                     "enum": CHART_TYPES,
-                    "description": "Chart type.",
+                    "description": (
+                        "Chart type to render: 'bar' (vertical bars), 'hbar' (horizontal "
+                        "bars), 'stacked' (stacked vertical bars, one per series), 'pie' "
+                        "(single-series pie), or 'donut' (single-series donut). Default 'bar'."
+                    ),
                 },
                 "data": {
+                    "type": ["array", "string"],
                     "description": (
-                        "Values to plot. Flat number list (e.g. [12,19,8,24]) or a "
-                        "list of series for grouped/stacked charts "
-                        "(e.g. [[4,8,6],[2,3,4]]) or a string '1,2,3|4,5,6'."
+                        "Required. Values to plot. A flat number list e.g. [12,19,8,24] "
+                        "renders one series; a list of series e.g. [[4,8,6],[2,3,4]] renders "
+                        "grouped/stacked bars; or pass a string '1,2,3|4,5,6' (series "
+                        "separated by '|')."
                     ),
                 },
                 "labels": {
-                    "description": "Category labels, as a list or comma-separated string.",
+                    "type": ["array", "string"],
+                    "description": (
+                        "Category labels for the data, as a list of strings or a "
+                        "comma-separated string. Optional."
+                    ),
                 },
-                "title": {"type": "string", "description": "Chart title."},
-                "width": {"type": "integer", "description": "Width in px (default 600)."},
-                "height": {"type": "integer", "description": "Height in px (default 300)."},
+                "title": {
+                    "type": "string",
+                    "description": "Chart title shown above the plot. Optional.",
+                },
+                "width": {
+                    "type": "integer",
+                    "description": "Image width in pixels (default 600).",
+                },
+                "height": {
+                    "type": "integer",
+                    "description": "Image height in pixels (default 300).",
+                },
                 "format": {
                     "type": "string",
                     "enum": FORMATS,
-                    "description": "Output format (default png).",
+                    "description": "Output format: 'png' (default) or 'svg'.",
                 },
                 "theme": {
                     "type": "string",
                     "enum": THEMES,
-                    "description": "Theme: light is free; dark/brand require a Pro license.",
+                    "description": (
+                        "Color theme. 'light' is free; 'dark' and 'brand' require a "
+                        "ChartBytes Pro license (a one-time paid upgrade). If Pro is "
+                        "requested without a license the server explains how to buy it."
+                    ),
                 },
             },
             "required": ["data"],
@@ -169,6 +201,30 @@ def handle_call(call_id, name, arguments):
             body, ctype = fetch(url)
         except ValueError as e:
             return rpc_error(call_id, -32602, f"Invalid arguments: {e}")
+        except urllib.error.HTTPError as e:
+            # 403 = a Pro-only feature (dark/brand theme) requested without a license.
+            if e.code == 403:
+                return rpc_result(call_id, {
+                    "content": [{"type": "text", "text": (
+                        "Chart not rendered: this request uses a Pro-only feature (dark or "
+                        "brand theme). ChartBytes Pro is a $9 one-time upgrade that unlocks "
+                        "dark/brand themes and 25,000 renders/month.\n"
+                        "Buy: https://chartbytes.meridian-digital.pro/api/checkout\n"
+                        "After purchase, set the CHARTBYTES_LICENSE environment variable to "
+                        "your license key (shown after checkout) and re-run this tool."
+                    )}],
+                    "isError": False,
+                })
+            if e.code == 429:
+                return rpc_result(call_id, {
+                    "content": [{"type": "text", "text": (
+                        "Chart not rendered: the free monthly render quota (500) is "
+                        "exceeded. ChartBytes Pro ($9 one-time) raises it to 25,000/month: "
+                        "https://chartbytes.meridian-digital.pro/api/checkout"
+                    )}],
+                    "isError": False,
+                })
+            return rpc_error(call_id, -32000, f"ChartBytes HTTP {e.code}: {e.reason}")
         except urllib.error.URLError as e:
             return rpc_error(call_id, -32000, f"ChartBytes request failed: {e}")
 
