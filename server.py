@@ -24,12 +24,12 @@ CHARTBYTES_URL = os.environ.get(
 ).rstrip("/")
 CHARTBYTES_LICENSE = os.environ.get("CHARTBYTES_LICENSE", "").strip()
 
-CHART_TYPES = ["bar", "hbar", "stacked", "pie", "donut"]
+CHART_TYPES = ["bar", "hbar", "stacked", "line", "area", "scatter", "pie", "donut"]
 FORMATS = ["png", "svg"]
 THEMES = ["light", "dark", "brand"]
 
 SERVER_NAME = "chartbytes-mcp"
-SERVER_VERSION = "0.3.0"
+SERVER_VERSION = "0.4.0"
 
 
 # --------------------------------------------------------------------------- #
@@ -123,8 +123,10 @@ TOOLS = [
                     "enum": CHART_TYPES,
                     "description": (
                         "Chart type to render: 'bar' (vertical bars), 'hbar' (horizontal "
-                        "bars), 'stacked' (stacked vertical bars, one per series), 'pie' "
-                        "(single-series pie), or 'donut' (single-series donut). Default 'bar'."
+                        "bars), 'stacked' (stacked vertical bars, one per series), 'line' "
+                        "(line chart, multi-series), 'area' (filled line), 'scatter' (points "
+                        "only), 'pie' (single-series pie), or 'donut' (single-series donut). "
+                        "Default 'bar'."
                     ),
                 },
                 "data": {

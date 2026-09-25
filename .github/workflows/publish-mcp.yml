@@ -30,7 +30,7 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/haswell119/chartbytes-mcp:1.0.1
+            ghcr.io/haswell119/chartbytes-mcp:1.0.2
             ghcr.io/haswell119/chartbytes-mcp:latest
 
       - name: Install mcp-publisher
