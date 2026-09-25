@@ -1,0 +1,26 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.haswell119/chartbytes-mcp",
+  "title": "ChartBytes",
+  "description": "Generate chart images (bar, pie, donut, stacked) as PNG/SVG for AI agents, with an embeddable URL.",
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/haswell119/chartbytes-mcp:1.0.0",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "CHARTBYTES_URL",
+          "description": "ChartBytes API base URL (defaults to https://chartbytes.meridian-digital.pro)",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        }
+      ]
+    }
+  ]
+}
